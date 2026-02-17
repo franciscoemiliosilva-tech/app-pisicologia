@@ -31,7 +31,8 @@ if st.button("Gerar Prontuário"):
                 
                 # Inteligência Gemini
                 genai.configure(api_key=api_key)
-                model_g = genai.GenerativeModel('gemini-1.5-flash')
+                model_g = genaigenai.GenerativeModel('models/gemini-1.5-flash')
+                
                 prompt = f"Crie um prontuário SOAP técnico baseado nestas notas: {notas_medicas} e nesta transcrição: {result['text']}"
                 response = model_g.generate_content(prompt)
                 
