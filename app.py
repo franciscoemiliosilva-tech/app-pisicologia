@@ -29,9 +29,9 @@ if st.button("Gerar Prontuário"):
                 model_w = whisper.load_model("tiny")
                 result = model_w.transcribe("video_temp.mp4")
                 
-                # Configuração do Gemini
+                # Configuração do Gemini - Usando o modelo correto
                 genai.configure(api_key=api_key)
-                model_g = genai.GenerativeModel(model_name='models/gemini-1.5-flash')
+                model_g = genai.GenerativeModel('gemini-1.5-flash')
                 
                 # Gerar o texto
                 prompt = f"Crie um prontuário SOAP técnico baseado nestas notas: {notas_medicas} e nesta transcrição: {result['text']}"
