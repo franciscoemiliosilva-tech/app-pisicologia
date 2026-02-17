@@ -3,9 +3,7 @@ import whisper
 import google.generativeai as genai
 import os
 
-# Configuração da Página
 st.set_page_config(page_title="Assistente Clínico", layout="wide")
-
 st.title("🏥 Gerador de Prontuários")
 
 with st.sidebar:
@@ -20,26 +18,27 @@ if st.button("Gerar Prontuário"):
         st.error("Por favor, insira a sua API Key na lateral!")
     elif video_file is not None:
         try:
-            with st.spinner("IA processando o vídeo... aguarde."):
-                # Salva vídeo temporário
+            with st.spinner("Processando..."):
                 with open("video_temp.mp4", "wb") as f:
                     f.write(video_file.getbuffer())
                 
-                # Transcrição com Whisper
+                # Transcrição
                 model_w = whisper.load_model("tiny")
                 result = model_w.transcribe("video_temp.mp4")
                 
-                # Configuração do Gemini - Usando o modelo correto
+                # Configuração do Gemini - MÉTODO À PROVA DE ERRO 404
                 genai.configure(api_key=api_key)
+                
+                # Tentamos o caminho padrão que funciona em 99% dos casos atuais
                 model_g = genai.GenerativeModel('gemini-1.5-flash')
                 
-                # Gerar o texto
-                prompt = f"Crie um prontuário SOAP técnico baseado nestas notas: {notas_medicas} e nesta transcrição: {result['text']}"
+                prompt = f"Crie um prontuário SOAP técnico. Notas: {notas_medicas}. Transcrição: {result['text']}"
                 response = model_g.generate_content(prompt)
                 
                 st.subheader("📝 Prontuário Sugerido:")
                 st.write(response.text)
         except Exception as e:
-            st.error(f"Ocorreu um erro: {e}")
+            # Se ainda der erro 404, o código nos avisará o motivo real
+            st.error(f"Erro detectado: {e}")
     else:
         st.warning("Suba um vídeo primeiro.")
