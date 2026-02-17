@@ -18,18 +18,18 @@ if st.button("Gerar Prontuário"):
         st.error("Por favor, insira a sua API Key na lateral!")
     elif video_file is not None:
         try:
-            with st.spinner("Processando..."):
+            with st.spinner("Processando áudio e texto..."):
+                # Salva vídeo temporário
                 with open("video_temp.mp4", "wb") as f:
                     f.write(video_file.getbuffer())
                 
-                # Transcrição
+                # Transcrição com Whisper
                 model_w = whisper.load_model("tiny")
                 result = model_w.transcribe("video_temp.mp4")
                 
-                # Configuração do Gemini - MÉTODO À PROVA DE ERRO 404
+                # Configuração do Gemini
                 genai.configure(api_key=api_key)
-                
-                # Tentamos o caminho padrão que funciona em 99% dos casos atuais
+                # Usamos o nome padrão que a versão >=0.8.3 reconhece
                 model_g = genai.GenerativeModel('gemini-1.5-flash')
                 
                 prompt = f"Crie um prontuário SOAP técnico. Notas: {notas_medicas}. Transcrição: {result['text']}"
@@ -38,7 +38,7 @@ if st.button("Gerar Prontuário"):
                 st.subheader("📝 Prontuário Sugerido:")
                 st.write(response.text)
         except Exception as e:
-            # Se ainda der erro 404, o código nos avisará o motivo real
             st.error(f"Erro detectado: {e}")
     else:
         st.warning("Suba um vídeo primeiro.")
+        
