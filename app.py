@@ -3,11 +3,11 @@ import whisper
 import google.generativeai as genai
 import os
 
+# Configuração da Página
 st.set_page_config(page_title="Assistente Clínico", layout="wide")
 
 st.title("🏥 Gerador de Prontuários")
 
-# Configurações na barra lateral
 with st.sidebar:
     st.header("Configuração")
     api_key = st.text_input("Cole sua Gemini API Key:", type="password")
@@ -21,18 +21,19 @@ if st.button("Gerar Prontuário"):
     elif video_file is not None:
         try:
             with st.spinner("IA processando o vídeo... aguarde."):
-                # Salva vídeo
+                # Salva vídeo temporário
                 with open("video_temp.mp4", "wb") as f:
                     f.write(video_file.getbuffer())
                 
-                # Transcrição (Whisper)
+                # Transcrição com Whisper
                 model_w = whisper.load_model("tiny")
                 result = model_w.transcribe("video_temp.mp4")
                 
-                # Inteligência Gemini
+                # Configuração do Gemini
                 genai.configure(api_key=api_key)
-                model_g = genaigenai.GenerativeModel('models/gemini-1.5-flash')
+                model_g = genai.GenerativeModel('gemini-1.5-flash')
                 
+                # Gerar o texto
                 prompt = f"Crie um prontuário SOAP técnico baseado nestas notas: {notas_medicas} e nesta transcrição: {result['text']}"
                 response = model_g.generate_content(prompt)
                 
