@@ -1,38 +1,53 @@
 import streamlit as st
 import whisper
 import google.generativeai as genai
+import os
 
-st.set_page_config(page_title="Assistente Clínico")
-st.title("🏥 Gerador de Prontuários")
+st.set_page_config(page_title="Assistente de Voz Clínico", layout="wide")
 
-# Configuração simples na barra lateral
-api_key = st.sidebar.text_input("Gemini API Key:", type="password")
+st.title("🎙️ Gerador de Prontuário por Áudio")
 
-video = st.file_uploader("Suba o vídeo aqui", type=['mp4', 'mov', 'mkv'])
-notas = st.text_area("Notas rápidas da sessão:")
+# Barra lateral para a chave
+with st.sidebar:
+    st.header("Configuração")
+    api_key = st.text_input("Cole sua Gemini API Key:", type="password")
 
-if st.button("Gerar Prontuário"):
-    if api_key and video:
+# Upload focado em Áudio
+audio_file = st.file_uploader("Selecione a gravação da sessão (Áudio)", type=['mp3', 'wav', 'm4a'])
+notas_medicas = st.text_area("Anotações complementares:")
+
+if st.button("✨ Gerar Prontuário"):
+    if not api_key:
+        st.error("Por favor, insira a sua API Key na lateral!")
+    elif audio_file is not None:
         try:
-            with st.spinner("Processando... aguarde um momento."):
-                # Salva o vídeo temporariamente
-                with open("temp.mp4", "wb") as f:
-                    f.write(video.getbuffer())
+            with st.status("Processando áudio...", expanded=True) as status:
+                # Salva o arquivo de áudio
+                with open("audio_temp.mp3", "wb") as f:
+                    f.write(audio_file.getbuffer())
                 
-                # Transcrição (Whisper)
-                modelo_audio = whisper.load_model("tiny")
-                transcricao = modelo_audio.transcribe("temp.mp4")["text"]
+                # Transcrição ultra-rápida
+                status.write("🎧 Transcrevendo falas...")
+                model_w = whisper.load_model("tiny")
+                result = model_w.transcribe("audio_temp.mp3")
                 
-                # Inteligência (Gemini) - Versão estável
+                # Inteligência Gemini
+                status.write("🧠 Criando prontuário técnico...")
                 genai.configure(api_key=api_key)
-                modelo_texto = genai.GenerativeModel('gemini-1.5-flash')
+                model_g = genai.GenerativeModel('gemini-1.5-flash')
                 
-                prompt = f"Gere um prontuário SOAP técnico. Notas: {notas}. Transcrição: {transcricao}"
-                resultado = modelo_texto.generate_content(prompt)
+                prompt = f"""Crie um prontuário SOAP técnico para psicóloga. 
+                Notas da sessão: {notas_medicas}
+                Transcrição do áudio: {result['text']}"""
                 
-                st.success("Concluído!")
-                st.write(resultado.text)
+                response = model_g.generate_content(prompt)
+                status.update(label="✅ Prontuário Gerado com Sucesso!", state="complete")
+                
+                st.divider()
+                st.subheader("📝 Resultado:")
+                st.write(response.text)
+                st.balloons()
         except Exception as e:
-            st.error(f"Erro detectado: {e}")
+            st.error(f"Ocorreu um ajuste necessário: {e}")
     else:
-        st.error("Por favor, coloque a API Key e o vídeo.")
+        st.warning("Suba um arquivo de áudio primeiro.")
